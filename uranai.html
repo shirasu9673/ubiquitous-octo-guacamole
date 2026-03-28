@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MYSTIC — 占い</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=Noto+Serif+JP:wght@300;400&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0a0a0f;
+    --bg2: #111118;
+    --surface: #16161f;
+    --border: rgba(255,255,255,0.07);
+    --border-hover: rgba(255,255,255,0.15);
+    --gold: #c9a96e;
+    --gold-light: #e8c98a;
+    --text: #e8e6df;
+    --muted: #7a7870;
+    --accent: #6b7fd4;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Noto Serif JP', serif;
+    font-weight: 300;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Star background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      radial-gradient(1px 1px at 10% 20%, rgba(255,255,255,0.4) 0%, transparent 100%),
+      radial-gradient(1px 1px at 30% 60%, rgba(255,255,255,0.3) 0%, transparent 100%),
+      radial-gradient(1px 1px at 50% 10%, rgba(255,255,255,0.5) 0%, transparent 100%),
+      radial-gradient(1px 1px at 70% 40%, rgba(255,255,255,0.35) 0%, transparent 100%),
+      radial-gradient(1px 1px at 85% 80%, rgba(255,255,255,0.4) 0%, transparent 100%),
+      radial-gradient(1px 1px at 20% 85%, rgba(255,255,255,0.3) 0%, transparent 100%),
+      radial-gradient(1px 1px at 60% 75%, rgba(255,255,255,0.25) 0%, transparent 100%),
+      radial-gradient(1px 1px at 90% 15%, rgba(255,255,255,0.45) 0%, transparent 100%),
+      radial-gradient(1.5px 1.5px at 45% 50%, rgba(201,169,110,0.3) 0%, transparent 100%),
+      radial-gradient(1px 1px at 15% 45%, rgba(255,255,255,0.2) 0%, transparent 100%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Header */
+  header {
+    text-align: center;
+    padding: 80px 20px 60px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .logo-en {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(48px, 8vw, 80px);
+    font-weight: 300;
+    letter-spacing: 0.3em;
+    color: var(--gold);
+    display: block;
+    line-height: 1;
+  }
+
+  .logo-ja {
+    font-size: 12px;
+    letter-spacing: 0.4em;
+    color: var(--muted);
+    margin-top: 12px;
+    display: block;
+  }
+
+  .header-line {
+    width: 60px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    margin: 24px auto;
+  }
+
+  /* Nav tabs */
+  .tabs {
+    display: flex;
+    justify-content: center;
+    gap: 0;
+    position: relative;
+    z-index: 1;
+    padding: 0 20px;
+    max-width: 640px;
+    margin: 0 auto 60px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .tab {
+    flex: 1;
+    padding: 14px 20px;
+    background: transparent;
+    border: none;
+    color: var(--muted);
+    font-family: 'Noto Serif JP', serif;
+    font-size: 13px;
+    letter-spacing: 0.15em;
+    cursor: pointer;
+    transition: all 0.3s;
+    position: relative;
+  }
+
+  .tab:not(:last-child) {
+    border-right: 1px solid var(--border);
+  }
+
+  .tab.active {
+    background: rgba(201,169,110,0.08);
+    color: var(--gold);
+  }
+
+  .tab:hover:not(.active) {
+    color: var(--text);
+    background: rgba(255,255,255,0.03);
+  }
+
+  /* Panels */
+  .panel {
+    display: none;
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 0 20px 80px;
+    position: relative;
+    z-index: 1;
+    animation: fadeUp 0.5s ease;
+  }
+
+  .panel.active { display: block; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Form card */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 40px 36px;
+  }
+
+  .card-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 22px;
+    font-weight: 300;
+    color: var(--gold-light);
+    letter-spacing: 0.1em;
+    margin-bottom: 8px;
+  }
+
+  .card-sub {
+    font-size: 12px;
+    color: var(--muted);
+    letter-spacing: 0.2em;
+    margin-bottom: 36px;
+  }
+
+  .field {
+    margin-bottom: 24px;
+  }
+
+  label {
+    display: block;
+    font-size: 11px;
+    letter-spacing: 0.25em;
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
+
+  select, input[type="date"], input[type="text"] {
+    width: 100%;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--text);
+    font-family: 'Noto Serif JP', serif;
+    font-size: 14px;
+    padding: 12px 16px;
+    appearance: none;
+    transition: border-color 0.2s;
+    outline: none;
+  }
+
+  select:focus, input:focus {
+    border-color: var(--gold);
+  }
+
+  .select-wrap {
+    position: relative;
+  }
+
+  .select-wrap::after {
+    content: '▾';
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--muted);
+    pointer-events: none;
+    font-size: 12px;
+  }
+
+  .row-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  .btn {
+    width: 100%;
+    padding: 15px;
+    background: transparent;
+    border: 1px solid var(--gold);
+    color: var(--gold);
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 16px;
+    letter-spacing: 0.3em;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.3s;
+    margin-top: 8px;
+  }
+
+  .btn:hover {
+    background: rgba(201,169,110,0.1);
+    color: var(--gold-light);
+  }
+
+  /* Result */
+  .result {
+    margin-top: 24px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    display: none;
+    animation: fadeUp 0.6s ease;
+  }
+
+  .result.show { display: block; }
+
+  .result-header {
+    background: linear-gradient(135deg, rgba(201,169,110,0.12), rgba(107,127,212,0.08));
+    border-bottom: 1px solid var(--border);
+    padding: 28px 32px;
+    text-align: center;
+  }
+
+  .result-sign {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 48px;
+    line-height: 1;
+    color: var(--gold);
+  }
+
+  .result-name {
+    font-size: 13px;
+    letter-spacing: 0.3em;
+    color: var(--text);
+    margin-top: 10px;
+  }
+
+  .result-body {
+    padding: 28px 32px;
+  }
+
+  .result-section {
+    margin-bottom: 24px;
+  }
+
+  .result-section:last-child { margin-bottom: 0; }
+
+  .result-label {
+    font-size: 10px;
+    letter-spacing: 0.3em;
+    color: var(--gold);
+    margin-bottom: 8px;
+    text-transform: uppercase;
+  }
+
+  .result-text {
+    font-size: 14px;
+    line-height: 2;
+    color: var(--text);
+    opacity: 0.85;
+  }
+
+  .score-bar {
+    margin-top: 6px;
+  }
+
+  .score-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 10px;
+  }
+
+  .score-key {
+    font-size: 11px;
+    color: var(--muted);
+    width: 40px;
+    letter-spacing: 0.1em;
+    flex-shrink: 0;
+  }
+
+  .score-track {
+    flex: 1;
+    height: 2px;
+    background: var(--border);
+    border-radius: 1px;
+    overflow: hidden;
+  }
+
+  .score-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--gold));
+    border-radius: 1px;
+    transition: width 1s ease;
+  }
+
+  .score-num {
+    font-size: 11px;
+    color: var(--muted);
+    width: 28px;
+    text-align: right;
+  }
+
+  .divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 24px 0;
+  }
+
+  /* Pillar grid */
+  .pillar-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-top: 12px;
+  }
+
+  .pillar-cell {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 14px 8px;
+    text-align: center;
+  }
+
+  .pillar-label {
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.2em;
+    margin-bottom: 8px;
+  }
+
+  .pillar-char {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 24px;
+    color: var(--gold-light);
+    line-height: 1;
+  }
+
+  .pillar-char-jp {
+    font-size: 16px;
+    color: var(--text);
+    margin-top: 6px;
+    opacity: 0.7;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <span class="logo-en">MYSTIC</span>
+  <span class="logo-ja">神秘の占い</span>
+  <div class="header-line"></div>
+</header>
+
+<div class="tabs">
+  <button class="tab active" onclick="switchTab('seiza')">星座 · 血液型</button>
+  <button class="tab" onclick="switchTab('shichuu')">四柱推命</button>
+</div>
+
+<!-- 星座・血液型 -->
+<div class="panel active" id="panel-seiza">
+  <div class="card">
+    <div class="card-title">星座 · 血液型占い</div>
+    <div class="card-sub">HOROSCOPE &amp; BLOOD TYPE</div>
+
+    <div class="field">
+      <label>生年月日</label>
+      <input type="date" id="s-birthday" value="1995-06-15">
+    </div>
+    <div class="row-2">
+      <div class="field">
+        <label>血液型</label>
+        <div class="select-wrap">
+          <select id="s-blood">
+            <option value="A">A型</option>
+            <option value="B">B型</option>
+            <option value="O">O型</option>
+            <option value="AB">AB型</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label>性別</label>
+        <div class="select-wrap">
+          <select id="s-gender">
+            <option value="f">女性</option>
+            <option value="m">男性</option>
+            <option value="x">その他</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn" onclick="readSeiza()">占 う</button>
+  </div>
+
+  <div class="result" id="result-seiza">
+    <div class="result-header">
+      <div class="result-sign" id="r-symbol"></div>
+      <div class="result-name" id="r-name"></div>
+    </div>
+    <div class="result-body">
+      <div class="result-section">
+        <div class="result-label">今日の運勢</div>
+        <div class="result-text" id="r-fortune"></div>
+      </div>
+      <hr class="divider">
+      <div class="result-section">
+        <div class="result-label">ラッキーポイント</div>
+        <div class="result-text" id="r-lucky"></div>
+      </div>
+      <hr class="divider">
+      <div class="result-section">
+        <div class="result-label">運気スコア</div>
+        <div class="score-bar" id="r-scores"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 四柱推命 -->
+<div class="panel" id="panel-shichuu">
+  <div class="card">
+    <div class="card-title">四柱推命</div>
+    <div class="card-sub">FOUR PILLARS OF DESTINY</div>
+
+    <div class="field">
+      <label>生年月日</label>
+      <input type="date" id="p-birthday" value="1995-06-15">
+    </div>
+    <div class="row-2">
+      <div class="field">
+        <label>出生時刻（任意）</label>
+        <input type="text" id="p-time" placeholder="例：14:30" maxlength="5">
+      </div>
+      <div class="field">
+        <label>性別</label>
+        <div class="select-wrap">
+          <select id="p-gender">
+            <option value="f">女性</option>
+            <option value="m">男性</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn" onclick="readShichuu()">命 を 読 む</button>
+  </div>
+
+  <div class="result" id="result-shichuu">
+    <div class="result-header">
+      <div class="result-sign" id="p-element-symbol"></div>
+      <div class="result-name" id="p-element-name"></div>
+    </div>
+    <div class="result-body">
+      <div class="result-section">
+        <div class="result-label">命式（四柱）</div>
+        <div class="pillar-grid" id="p-pillars"></div>
+      </div>
+      <hr class="divider">
+      <div class="result-section">
+        <div class="result-label">本命星・性格</div>
+        <div class="result-text" id="p-personality"></div>
+      </div>
+      <hr class="divider">
+      <div class="result-section">
+        <div class="result-label">今年の運勢（2025年）</div>
+        <div class="result-text" id="p-year"></div>
+      </div>
+      <hr class="divider">
+      <div class="result-section">
+        <div class="result-label">運気スコア</div>
+        <div class="score-bar" id="p-scores"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function switchTab(id) {
+  document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', ['seiza','shichuu'][i] === id));
+  document.querySelectorAll('.panel').forEach(p => p.classList.toggle('active', p.id === 'panel-'+id));
+}
+
+// ========== 星座・血液型 ==========
+const SEIZA = [
+  { name:'山羊座', en:'CAPRICORN', sym:'♑', dates:[[12,22],[1,19]] },
+  { name:'水瓶座', en:'AQUARIUS',  sym:'♒', dates:[[1,20],[2,18]] },
+  { name:'魚座',   en:'PISCES',    sym:'♓', dates:[[2,19],[3,20]] },
+  { name:'牡羊座', en:'ARIES',     sym:'♈', dates:[[3,21],[4,19]] },
+  { name:'牡牛座', en:'TAURUS',    sym:'♉', dates:[[4,20],[5,20]] },
+  { name:'双子座', en:'GEMINI',    sym:'♊', dates:[[5,21],[6,21]] },
+  { name:'蟹座',   en:'CANCER',    sym:'♋', dates:[[6,22],[7,22]] },
+  { name:'獅子座', en:'LEO',       sym:'♌', dates:[[7,23],[8,22]] },
+  { name:'乙女座', en:'VIRGO',     sym:'♍', dates:[[8,23],[9,22]] },
+  { name:'天秤座', en:'LIBRA',     sym:'♎', dates:[[9,23],[10,23]] },
+  { name:'蠍座',   en:'SCORPIO',   sym:'♏', dates:[[10,24],[11,22]] },
+  { name:'射手座', en:'SAGITTARIUS',sym:'♐',dates:[[11,23],[12,21]] },
+];
+
+const BLOOD = {
+  A:  '几帳面で責任感が強く、完璧主義な傾向があります。',
+  B:  '自由奔放でマイペース。好奇心旺盛なアーティスト気質です。',
+  O:  '大らかでリーダーシップがあり、人を引きつける魅力の持ち主。',
+  AB: '二面性を持ち、合理的かつ感受性豊か。独自の世界観があります。',
+};
+
+const FORTUNES = [
+  '今日は直感が冴える一日。ためらわず行動に移すことで、新たな扉が開きます。',
+  '人との縁が運を呼び込む日。久しぶりの連絡を取ってみるのも良いでしょう。',
+  '内省の時。焦らず自分のペースを守ることで、本来の力が発揮されます。',
+  '創造性が高まっています。アイデアを形にするなら今がベストタイミング。',
+  'エネルギーが充実した一日。積極的に動くほど、良い結果がついてきます。',
+];
+
+const LUCKY_ITEMS = [
+  ['色', '深海ブルー'],['色', 'テラコッタ'],['色', 'シルバーグレー'],['色', 'フォレストグリーン'],
+];
+const LUCKY_NUMS = [3,7,11,17,22,28];
+const LUCKY_PLACES = ['図書館','カフェのテラス席','水辺','美術館','静かな公園'];
+
+function getSeiza(month, day) {
+  for (const s of SEIZA) {
+    const [m1,d1] = s.dates[0], [m2,d2] = s.dates[1];
+    if ((month===m1 && day>=d1) || (month===m2 && day<=d2)) return s;
+  }
+  return SEIZA[0];
+}
+
+function rand(arr, seed) {
+  return arr[seed % arr.length];
+}
+
+function readSeiza() {
+  const bday = document.getElementById('s-birthday').value;
+  if (!bday) { alert('生年月日を入力してください'); return; }
+  const d = new Date(bday);
+  const month = d.getMonth()+1, day = d.getDate();
+  const blood = document.getElementById('s-blood').value;
+  const seed = d.getFullYear() + month + day + new Date().getDate();
+
+  const seiza = getSeiza(month, day);
+  document.getElementById('r-symbol').textContent = seiza.sym;
+  document.getElementById('r-name').textContent = seiza.name + '  ×  ' + blood + '型';
+
+  const fortune = rand(FORTUNES, seed);
+  document.getElementById('r-fortune').textContent = fortune;
+
+  const lc = rand(LUCKY_ITEMS, seed);
+  const ln = LUCKY_NUMS[seed % LUCKY_NUMS.length];
+  const lp = rand(LUCKY_PLACES, seed+1);
+  document.getElementById('r-lucky').innerHTML =
+    `ラッキーカラー：${lc[1]}　　ラッキーナンバー：${ln}　　ラッキースポット：${lp}<br><br>${BLOOD[blood]}`;
+
+  const scores = [
+    { key:'総合', val: 55 + (seed % 40) },
+    { key:'恋愛', val: 40 + ((seed*3) % 55) },
+    { key:'仕事', val: 45 + ((seed*7) % 50) },
+    { key:'金運', val: 35 + ((seed*11) % 60) },
+  ];
+  renderScores('r-scores', scores);
+
+  const el = document.getElementById('result-seiza');
+  el.classList.add('show');
+  el.scrollIntoView({ behavior:'smooth', block:'nearest' });
+}
+
+function renderScores(id, scores) {
+  const el = document.getElementById(id);
+  el.innerHTML = scores.map(s =>
+    `<div class="score-row">
+      <span class="score-key">${s.key}</span>
+      <div class="score-track"><div class="score-fill" style="width:${s.val}%"></div></div>
+      <span class="score-num">${s.val}</span>
+    </div>`
+  ).join('');
+  setTimeout(() => el.querySelectorAll('.score-fill').forEach(f => {
+    const w = f.style.width; f.style.width='0'; setTimeout(()=>f.style.width=w, 50);
+  }), 50);
+}
+
+// ========== 四柱推命 ==========
+const JIKKAN = ['甲','乙','丙','丁','戊','己','庚','辛','壬','癸'];
+const JUNISHI = ['子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥'];
+const GOGY = ['木','火','土','金','水'];
+const GOGY_SYM = ['🌿','🔥','⛰','⚙','💧'];
+
+const PERSONALITIES = [
+  '強い意志と実行力を持つリーダータイプ。困難を乗り越える粘り強さが特徴です。',
+  '直感と感受性に優れ、芸術的センスが光ります。人の心を動かす力があります。',
+  '知性と冷静な判断力を兼ね備えています。計画的に物事を進める能力に長けています。',
+  '温かみと包容力があり、周囲から信頼されます。協調性と社交性が豊かです。',
+  '変革と革新を好む自由人。独自の視点と柔軟な思考力で時代を切り拓きます。',
+];
+
+const YEAR_FORTUNES = [
+  '大きな変化の年。新しい挑戦が吉。特に秋以降、運気が上昇します。',
+  '充実と安定の年。築いてきたものが実を結び始めます。人間関係に恵まれます。',
+  '内なる成長の年。表面的な結果より、精神的な深まりを大切にする時期です。',
+  '飛躍の種を蒔く年。今の努力が数年後に大きな花を咲かせます。',
+  '転換点の年。手放すことで新しいものが入ってきます。直感を信じて。',
+];
+
+function calcPillars(year, month, day, hour) {
+  const yIdx = (year - 4) % 60;
+  const jk = JIKKAN[yIdx % 10];
+  const js = JUNISHI[yIdx % 12];
+
+  const mBase = (year * 12 + month) % 60;
+  const mk = JIKKAN[mBase % 10];
+  const ms = JUNISHI[mBase % 12];
+
+  const dBase = Math.floor((new Date(year,month-1,day) - new Date(1900,0,1)) / 86400000) % 60;
+  const dk = JIKKAN[dBase % 10];
+  const ds = JUNISHI[dBase % 12];
+
+  let hk = '—', hs = '—';
+  if (hour !== null) {
+    const hBase = (dBase * 12 + Math.floor(hour / 2)) % 60;
+    hk = JIKKAN[hBase % 10];
+    hs = JUNISHI[hBase % 12];
+  }
+
+  return [
+    { label:'年柱', kan: jk, shi: js },
+    { label:'月柱', kan: mk, shi: ms },
+    { label:'日柱', kan: dk, shi: ds },
+    { label:'時柱', kan: hk, shi: hs },
+  ];
+}
+
+function readShichuu() {
+  const bday = document.getElementById('p-birthday').value;
+  if (!bday) { alert('生年月日を入力してください'); return; }
+  const d = new Date(bday);
+  const y = d.getFullYear(), m = d.getMonth()+1, day = d.getDate();
+  const timeVal = document.getElementById('p-time').value.trim();
+  let hour = null;
+  if (timeVal) {
+    const parts = timeVal.split(':');
+    hour = parseInt(parts[0]) + (parseInt(parts[1]||0)/60);
+  }
+
+  const pillars = calcPillars(y, m, day, hour);
+  const seed = y + m + day;
+
+  const elemIdx = seed % 5;
+  document.getElementById('p-element-symbol').textContent = GOGY_SYM[elemIdx];
+  document.getElementById('p-element-name').textContent = GOGY[elemIdx] + 'の命　' + pillars[0].kan + pillars[0].shi;
+
+  document.getElementById('p-pillars').innerHTML = pillars.map(p =>
+    `<div class="pillar-cell">
+      <div class="pillar-label">${p.label}</div>
+      <div class="pillar-char">${p.kan}</div>
+      <div class="pillar-char-jp">${p.shi}</div>
+    </div>`
+  ).join('');
+
+  document.getElementById('p-personality').textContent = PERSONALITIES[seed % PERSONALITIES.length];
+  document.getElementById('p-year').textContent = YEAR_FORTUNES[(seed+1) % YEAR_FORTUNES.length];
+
+  const scores = [
+    { key:'総合', val: 50 + (seed % 45) },
+    { key:'対人', val: 42 + ((seed*5) % 52) },
+    { key:'仕事', val: 48 + ((seed*9) % 48) },
+    { key:'金運', val: 38 + ((seed*13) % 58) },
+  ];
+  renderScores('p-scores', scores);
+
+  const el = document.getElementById('result-shichuu');
+  el.classList.add('show');
+  el.scrollIntoView({ behavior:'smooth', block:'nearest' });
+}
+</script>
+</body>
+</html>
